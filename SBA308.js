@@ -58,11 +58,12 @@ const assignmentGroup = [
             }
         ]
     }
+]
 
 
 
 // learnerSubmission
-    const learnerSubmission = [
+    const learnerSubmissions = [
     {
         learner_id: 123,
         assignment_id: 101307,
@@ -130,28 +131,28 @@ function getLearnerData(course, assignmentGroup, learnerSubmissions) {
         }
     } 
     
-    catch (error) {
-        console.error("An error occured:", error.message);
-        return [];
-    }
+
 }
 
 // Assignment Indexing
-
-// Grouping Learner
-
-    const now = new Date();
     const assignmentInfo = {};
     for (const group of assignmentGroup) {
         for (const assignment of group.assignments) {
             assignmentInfo[assignment.id] = assignment;
         }
     }
+// Grouping Learner
+
+
+
 
     const learners = {};
+    const now = new Date();
+    
     for (const submission of learnerSubmissions) {
-        console.log('Processing:',submission.assignment_id);
         const learnerId = submission.learner_id;
+        const assignment = assignmentInfo[submission.assignment_id];
+        console.log('Found assignment:', !assignment);
         if (!learners[learnerId]) {
             learners[learnerId] = {
                 id: learnerId,
@@ -163,8 +164,7 @@ function getLearnerData(course, assignmentGroup, learnerSubmissions) {
         }
 
 
-        const assignment = assignmentInfo[submission.assignment_id];
-        console.log('Found assignment:', !assignment);
+
         if (!assignment) {
             console.log('SKIPPED - no assignment');
             continue;
@@ -235,7 +235,11 @@ for (const learnerId in learners) {
     };
 
     results.push(resultObj);
-}
+
+    }   catch (error) {
+            console.error("An error occured:", error.message);
+            return [];
+        }
 
 return results;
 
