@@ -28,13 +28,13 @@ const assignmentGroup = {
             name: "The Document Object Model",
             due_at: "01-26-2025",
             points_possible: 1250
-        }
-    ]
-    id: 202,
-    name: "KBA",
-    course_id: 3033,
-    group_weight: 25,
-    assignments: [
+        },
+        {
+            id: 202,
+            name: "KBA",
+            course_id: 3033,
+            group_weight: 25,
+            assignments: [
         {
             id: 202307,
             name: "Fundamentals of HTML/CSS",
@@ -54,10 +54,10 @@ const assignmentGroup = {
             points_possible: 250
         }
     ]
-}
+
 
 // learnerSubmission
-const learnerSubmission = [
+    const learnerSubmission = [
     {
         learner_id: 123,
         assignment_id: 101307,
@@ -110,12 +110,14 @@ const learnerSubmission = [
 
 
 // GET LEARNER DATA
-function getLearnerData(courseInfo, assignmentGroup, learnerSubmission) {
+function getLearnerData(course, assignmentGroup, learnerSubmissions) {
     try{
         if(assignmentGroup.course_id !== course.id) {
-            throw new Error(`AssignmentGroup ${arguments.id} does not belong to Course.`);
+            throw new Error(`AssignmentGroup ${arguments.id} does not belong to Course ${course.id}.`);
         }
-    } catch (error) {
+    } 
+    
+    catch (error) {
         console.error("An error occured:", error.message);
         return [];
     }
@@ -125,28 +127,15 @@ function getLearnerData(courseInfo, assignmentGroup, learnerSubmission) {
 
 const assignmentInfo = {};
 
-for (let i = 0; i < assignmentGroup.assignments.length; i++) {
-    const assignment = assignmentGroup.assignments[i];
+for (const assignment of assignmentGroup.assignments) {
     assignmentInfo[assignment.id] = assignment;
 }
 
 // Grouping Learner
 const learners = {};
 
-for (const submission of learnerSubmission) {
-    const assignment = assignmentInfo[submission.assignment_id];
+for (const submission of learnerSubmissions) {
     const learnerId = submission.learner_id;
-    
-    if (!assignment) {
-        continue;
-    }
-
-    const dueDate = new Date(assignment.due_at);
-    const submittedDate = new Date(submission.submission.submitted_at)
-    const now = new Date();
-    if (dueDate > now) {
-        continue;
-    }
     if (!learners[learnerId]) {
         learners[learnerId] = {
             id: learnerId,
@@ -157,34 +146,56 @@ for (const submission of learnerSubmission) {
         };
     }
 
-    if (assignment.points_possible === 0) {
+    const assignment = assignmentInfo[submission.assignment_id];
+    if (!assignment) {
+        continue;
+    }
+
+    const dueDate = new Date(assignment.due_at);
+    const submittedDate = new Date(submission.submission.submitted_at)
+    const now = new Date();
+    if (dueDate > now) {
+        continue;
+    }
+}
+
+    let finalScore = submission.submission.score;
+    const pointPossible = assignment.points_possible;
+
+    if (pointPossible) <= 0) {
+        contiue
+    }
+
+    if (pointPossible === 0) {
         console.warn(`Assignment ${assignment.id} has 0 points possible, skipping.`);
         continue;
     }
 
-    let finalScore = submission.submission.score;
 
     if (submittedDate > dueDate) {
-        const penalty = assignment.points_possible * 0.1;
+        const penalty = score - .01 * pointPossible;
         finalScore -= penalty;
+        if (penalty < 0) penalty = 0
     }
 
-    learner[learnerId].totalScore += finalScore;
-    learner[learnerId].totalPossible += assignment.points_possible;
+    const percentage = finalScore / pointPossible;
 
-    learner[learnerId].score[assignment.id] = finalScore / assignment.points_possible;
+    const learner = learners[learnerId];
+
+    learner.assignment[assignment.id] = percentage;
+
+    learner.totalScore += finalScore;
+    learner.totalPossible += pointPossible;
 }
 
 // FORMATTED RESULTS
 const results [];
 
-for (const key in learners) {
-    const learner = learners[key];
+for (const learnerId in learners) {
+    const learner = learners[learnerId];
+    const avg = learner.totalPossible > 0
+    ? learner.finalScore / learner.pointPossible: 0;
 
-    let avg = 0;
-    if (learner.totalPossible !==0) {
-        avg = learner.totalScore / learner.totalPossible;
-    }
     const resultObj = {
         id: learner.id,
         avg: avg,
