@@ -4,8 +4,8 @@ const courseInfo = {
     name: "Web Design Essentials"
 };
 
-// assignmentGroup Object
-const assignmentGroup = [
+// assignmentGroups Object
+const assignmentGroups = [
     {
         id: 101,
         name: "SBA",
@@ -124,122 +124,105 @@ const assignmentGroup = [
 
 
 // GET LEARNER DATA
-function getLearnerData(course, assignmentGroup, learnerSubmissions) {
-    try{
-        if(assignmentGroup[0].course_id !== course.id) {
-            throw new Error(`AssignmentGroup ${assignmentGroup[0].id} does not belong to Course ${course.id}.`);
-        }
-    } 
-    
+    function getLearnerData(course, assignmentGroups, learnerSubmissions) {
+        try{
+            if(assignmentGroups[0].course_id !== course.id) {
+                throw new Error(`assignmentGroups ${assignmentGroups[0].id} does not belong to Course ${course.id}.`);
+            }
 
-}
+    
 
 // Assignment Indexing
-    const assignmentInfo = {};
-    for (const group of assignmentGroup) {
-        for (const assignment of group.assignments) {
-            assignmentInfo[assignment.id] = assignment;
-        }
-    }
+            const assignmentInfo = {};
+            for (const group of assignmentGroups) {
+                for (const assignment of group.assignments) {
+                    assignmentInfo[assignment.id] = assignment;
+                }
+            }
+
 // Grouping Learner
-
-
-
-
-    const learners = {};
-    const now = new Date();
+            const learners = {};
+            const now = new Date();
     
-    for (const submission of learnerSubmissions) {
-        const learnerId = submission.learner_id;
-        const assignment = assignmentInfo[submission.assignment_id];
-        console.log('Found assignment:', !assignment);
-        if (!learners[learnerId]) {
-            learners[learnerId] = {
-                id: learnerId,
-                totalScore: 0,
-                totalPossible: 0,
-                scores: {},
-                assignments: {}
-            };
-        }
+            for (const submission of learnerSubmissions) {
+                const learnerId = submission.learner_id;
+                const assignment = assignmentInfo[submission.assignment_id];
+                
+                if (!assignment) {
+                    console.log('Assignment ${submission.assignment_id} not found, SKIPPED.');
+                    continue;
+                }
 
 
+// INIT LEARNER
+                if (!learners[learnerId]) {
+                    learners[learnerId] = {
+                        id: learnerId,
+                        totalScore: 0,
+                        totalPossible: 0,
+                        scores: {},
+                    };
+                }
 
-        if (!assignment) {
-            console.log('SKIPPED - no assignment');
-            continue;
-        }
-
-
-
-
-
-
-
-
-
-    const dueDate = new Date(assignment.due_at);
-    console.log('Due:', dueDate, 'Now:', now);
-    const submittedDate = new Date(submission.submission.submitted_at);
-  
-    if (dueDate > now) {
-        continue;
-    }
-
-    let finalScore = submission.submission.score;
-    const pointPossible = assignment.points_possible;
-
-    if (pointPossible <= 0) {
-    continue;
-    }
-
-    if (pointPossible === 0) {
-        console.warn(`Assignment ${assignment.id} has 0 points possible, skipping.`);
-        continue;
-    }
-
-    let penalty = 0;
-    if (submittedDate > dueDate) {
-        penalty = 0.01 * pointPossible;
-        finalScore -= penalty;
-        if (penalty < 0) penalty = 0;
-    }
+                const dueDate = new Date(assignment.due_at);
+                const submittedDate = new Date(submission.submission.submitted_at);
 
 
+// SKIP ASSIGNMENTS NOT DUE
+                if (dueDate > now) {
+                    continue;
+                }
 
 
+                let finalScore = submission.submission.score;
+                const pointPossible = assignment.points_possible;
 
-    const percentage = finalScore / pointPossible;
-    const learner = learners[learnerId];
+                if (pointPossible <= 0) {
+                    console.warn(`Assignment ${assignment.id} has invalid points possible, skipping.`);
+                    continue;
+                }
 
-    learner.assignments[assignment.id] = percentage;
-    learner.totalScore += finalScore;
-    learner.totalPossible += pointPossible;
+// LATE PENALTY 
+                if (submittedDate > dueDate) {
+                    const penalty = 0.10 * pointPossible;
+                    finalScore -= penalty;
+                    finalScore = Math.max(0, finalScore);
+                }
+
+                const percentage = finalScore / pointPossible;
+                const learner = learners[learnerId];
+
+// STORING DATA
+                learner.scores[assignment.id] = percentage;
+                learner.totalScore += finalScore;
+                learner.totalPossible += pointPossible;
+            }
 
 
-}
 
 // FORMATTED RESULTS
-const results = [];
+            const results = [];
 
-for (const learnerId in learners) {
-    const learner = learners[learnerId];
-    const avg = learner.totalPossible > 0
-    ? learner.totalScore / learner.totalPossible
-    : 0;
+            for (const learnerId in learners) {
+                const learner = learners[learnerId];
+                const avg = learner.totalPossible > 0
+                    ? learner.totalScore / learner.totalPossible
+                    : 0;
 
-    const resultObj = {
-        id: learner.id,
-        avg: avg,
-        scores: learner.scores
-    };
-
-    results.push(resultObj);
+                const resultObj = {
+                    id: parseInt(learner.id),
+                    avg: avg,
+                    scores: learner.scores
+                };
+                results.push(resultObj);
+            } 
+            return results;
 
     }   catch (error) {
             console.error("An error occured:", error.message);
             return [];
-        }
-
-return results;
-
+    }
+}
+// CODE VALIDATION
+const result = getLearnerData(courseInfo, assignmentGroups, learnerSubmissions);
+console.log(result);
