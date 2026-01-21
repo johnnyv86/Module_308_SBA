@@ -169,8 +169,30 @@ for (const submission of learnerSubmission) {
         finalScore -= penalty;
     }
 
-    learnerId[learnerId].totalScore += finalScore;
-    learnerId[learnerId]. totalPossible += assignment.points_possible;
+    learner[learnerId].totalScore += finalScore;
+    learner[learnerId].totalPossible += assignment.points_possible;
 
-    
+    learner[learnerId].score[assignment.id] = finalScore / assignment.points_possible;
 }
+
+// FORMATTED RESULTS
+const results [];
+
+for (const key in learners) {
+    const learner = learners[key];
+
+    let avg = 0;
+    if (learner.totalPossible !==0) {
+        avg = learner.totalScore / learner.totalPossible;
+    }
+    const resultObj = {
+        id: learner.id,
+        avg: avg,
+        learner.scores
+    };
+
+    resultObj.push(resultObj);
+}
+
+return results;
+
